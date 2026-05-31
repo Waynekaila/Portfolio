@@ -222,14 +222,13 @@
                     </a>
                 </div>
                 <div>
-    <p class="text-gray-400">
-        &copy; <a href="panel.html" class="hover:text-gray-400 cursor-default select-none transition-none">2026</a> Tous droits réservés
-    </p>
-</div>
+                    <p class="text-gray-400">
+                        &copy; 2026 Tous droits réservés
+                    </p>
+                </div>
             </div>
         </div>
     </footer>
-
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
@@ -241,7 +240,8 @@
 
         const emojiMap = {
             guitare: "🎸", musique: "🎵", robot: "🦾", code: "💻", 
-            lecture: "📚", manga: "🎨", anime: "🎬", sport: "⚽"
+            lecture: "📚", manga: "🎨", anime: "🎬", sport: "⚽",
+            linux: "🐧", obsidian: "📝", "3d": "💡", web: "🌐", robotique: "🤖"
         };
 
         const supportedDevicons = [
@@ -252,6 +252,7 @@
         ];
 
         function getEmoji(title) {
+            if (!title) return "✨";
             const lowerTitle = title.toLowerCase();
             for (const key in emojiMap) {
                 if (lowerTitle.includes(key)) return emojiMap[key];
@@ -260,7 +261,16 @@
         }
 
         async function fetchSkillsAndSoftwares() {
-            // 1. Hard Skills
+            // Test rapide de connexion en console
+            try {
+                const { error: testErr } = await supabase.from('Softwares').select('count');
+                if (testErr) console.error("🔴 Échec de poignée de main Supabase :", testErr.message);
+                else console.log("🟢 Authentification et connexion Supabase OK.");
+            } catch(err) {
+                console.error("Erreur réseau Supabase:", err);
+            }
+
+            // 1. Hard Skills (Uniquement le badge épuré, sans devicon)
             const skillsContainer = document.getElementById('skills-container');
             try {
                 const { data: skills, error: errSkills } = await supabase
@@ -273,26 +283,25 @@
                 if (skillsContainer) {
                     skillsContainer.innerHTML = '';
                     skills.forEach(skill => {
+                        const levelNum = parseFloat(skill.Level);
                         let label = "Intermédiaire";
-                        if (skill.Level >= 90) label = "Expert";
-                        else if (skill.Level >= 75) label = "Avancé";
-
-                        const cleanedName = skill.Name.toLowerCase().trim().replace('++', 'plusplus').replace(/[\s\.\-_]/g, '');
                         
-                        let iconHTML = `<span class="text-xs font-bold text-indigo-500 bg-indigo-50 w-full h-full rounded-xl flex items-center justify-center border border-indigo-100/40">&lt;/&gt;</span>`;
-                        if (supportedDevicons.includes(cleanedName)) {
-                            iconHTML = `<i class="devicon-${cleanedName}-plain colored"></i>`;
+                        if (levelNum < 35) {
+                            label = "Débutant";
+                        } else if (levelNum >= 35 && levelNum <= 70) {
+                            label = "Intermédiaire";
+                        } else {
+                            label = "Expert";
                         }
 
+                        
                         skillsContainer.innerHTML += `
                             <div class="interactive-element flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-2xl border border-gray-100 shadow-sm shrink-0">
-                                    ${iconHTML}
-                                </div>
+                                
                                 <div class="w-full">
                                     <div class="flex justify-between mb-1.5">
                                         <span class="text-sm font-semibold text-gray-800 capitalize">${skill.Name}</span>
-                                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${label} (${skill.Level}%)</span>
+                                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${label}</span>
                                     </div>
                                     <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                                         <div class="skill-progress bg-indigo-600 h-2 rounded-full transition-all duration-1000 ease-out" data-level="${skill.Level}" style="width: 0%"></div>
@@ -310,8 +319,8 @@
                     }, 100);
                 }
             } catch (e) {
-                console.error(e.message);
-                if (skillsContainer) skillsContainer.innerHTML = '<p class="text-red-500 text-xs">Failed to load technical skills.</p>';
+                console.error("Erreur Hard Skills:", e.message);
+                if (skillsContainer) skillsContainer.innerHTML = '<p class="text-red-500 text-xs">Échec du chargement des compétences.</p>';
             }
 
             // 2. Soft Skills
@@ -326,7 +335,7 @@
 
                 if (softskillsContainer) {
                     softskillsContainer.innerHTML = '';
-                    if(softSkills.length === 0) {
+                    if (!softSkills || softSkills.length === 0) {
                         softskillsContainer.innerHTML = '<p class="text-gray-500 text-sm">Aucun soft skill trouvé.</p>';
                     } else {
                         softSkills.forEach((soft, index) => {
@@ -335,20 +344,18 @@
                             span.style.transitionDelay = `${index * 40}ms`;
                             span.textContent = soft.Name;
                             softskillsContainer.appendChild(span);
-                            
                             setTimeout(() => span.classList.add('visible'), 50);
                         });
                     }
                 }
             } catch (e) {
-                console.error(e.message);
-                if (softskillsContainer) softskillsContainer.innerHTML = '<p class="text-red-500 text-xs">Failed to load soft skills.</p>';
+                console.error("Erreur Soft Skills:", e.message);
+                if (softskillsContainer) softskillsContainer.innerHTML = '<p class="text-red-500 text-xs">Échec du chargement des qualités humaines.</p>';
             }
 
-            // 3. Écosystème Logiciels & Outils (Intégration et traitement de la colonne Icon)
+            // 3. Écosystème Logiciels & Outils (Priorité Devicon -> Sinon Colonne Icon -> Sinon Fallback)
             const categoriesContainer = document.getElementById('categories-container');
             try {
-                // Récupération explicite de l'URL dans la colonne Icon
                 const { data: softwares, error: errSoftwares } = await supabase
                     .from('Softwares')
                     .select('Name, Category, Icon')
@@ -358,7 +365,6 @@
 
                 if (categoriesContainer) {
                     categoriesContainer.innerHTML = '';
-
                     if (!softwares || softwares.length === 0) {
                         categoriesContainer.innerHTML = '<p class="text-gray-500 text-sm col-span-full">Aucun logiciel trouvé.</p>';
                     } else {
@@ -372,19 +378,21 @@
                         Object.entries(grouped).forEach(([categoryName, softwareList], index) => {
                             const pillsHTML = softwareList.map(sw => {
                                 let iconHTML = '';
-
-                                // Option A : Si une URL d'image est présente dans la colonne Icon, on l'affiche directement
-                                if (sw.Icon && (sw.Icon.startsWith('http://') || sw.Icon.startsWith('https://'))) {
-                                    iconHTML = `<img src="${sw.Icon}" alt="${sw.Name}" class="w-5 h-5 object-contain" onerror="this.parentElement.innerHTML='&lt;/&gt;'"/>`;
-                                } else {
-                                    // Option B : Fallback sur Devicon si pas d'URL directe
-                                    const cleanedName = sw.Name.toLowerCase().trim().replace('++', 'plusplus').replace(/[\s\.\-_]/g, '');
-                                    if (supportedDevicons.includes(cleanedName)) {
-                                        iconHTML = `<i class="devicon-${cleanedName}-plain colored text-xl"></i>`;
-                                    } else {
-                                        // Option C : Fallback texte générique
-                                        iconHTML = `<span class="text-[10px] font-bold text-indigo-500 bg-indigo-50/80 w-full h-full rounded-lg flex items-center justify-center border border-indigo-100/40">&lt;/&gt;</span>`;
-                                    }
+                                
+                                // Nettoyage et normalisation du nom pour correspondre à supportedDevicons
+                                const cleanedName = sw.Name.toLowerCase().trim().replace('++', 'plusplus').replace(/[\s\.\-_]/g, '');
+                                
+                                // Étape 1 : Recherche automatique textuelle dans Devicon
+                                if (supportedDevicons.includes(cleanedName)) {
+                                    iconHTML = `<i class="devicon-${cleanedName}-plain colored text-xl"></i>`;
+                                } 
+                                // Étape 2 : Si non trouvé, utilisation de la colonne Icon (URL d'image valide)
+                                else if (sw.Icon && (sw.Icon.startsWith('http://') || sw.Icon.startsWith('https://'))) {
+                                    iconHTML = `<img src="${sw.Icon}" alt="${sw.Name}" class="w-5 h-5 object-contain" onerror="this.parentElement.innerHTML='🛠️'"/>`;
+                                } 
+                                // Étape 3 : Fallback textuel de la colonne ou icône par défaut
+                                else {
+                                    iconHTML = `<span class="text-[10px] font-bold text-indigo-500 bg-indigo-50/80 w-full h-full rounded-lg flex items-center justify-center border border-indigo-100/40">${sw.Icon || '🛠️'}</span>`;
                                 }
 
                                 return `
@@ -417,8 +425,8 @@
                     }
                 }
             } catch (e) {
-                console.error(e.message);
-                if (categoriesContainer) categoriesContainer.innerHTML = '<p class="text-red-500 text-xs col-span-full">Failed to load softwares.</p>';
+                console.error("Erreur Logiciels:", e.message);
+                if (categoriesContainer) categoriesContainer.innerHTML = '<p class="text-red-500 text-xs col-span-full">Échec du chargement des logiciels.</p>';
             }
 
             // 4. Activités & Intérêts
@@ -426,23 +434,35 @@
             try {
                 const { data: hobbies, error: errHobbies } = await supabase
                     .from('Hobbies')
-                    .select('Title, Description')
+                    .select('Title, Description, Icon')
                     .order('Title', { ascending: true });
 
                 if (errHobbies) throw errHobbies;
 
                 if (hobbiesContainer) {
                     hobbiesContainer.innerHTML = '';
-                    if (hobbies.length === 0) {
+                    if (!hobbies || hobbies.length === 0) {
                         hobbiesContainer.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center">Aucun intérêt trouvé.</p>';
                     } else {
                         hobbies.forEach((hobby, index) => {
-                            const emoji = getEmoji(hobby.Title);
+                            let mediaHTML = '';
+
+                            if (hobby.Icon && (hobby.Icon.startsWith('http://') || hobby.Icon.startsWith('https://'))) {
+                                mediaHTML = `
+                                    <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+                                        <img src="${hobby.Icon}" alt="${hobby.Title}" class="w-8 h-8 object-contain transform transition-transform duration-300 hover:scale-125" 
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-2xl mb-2 block\'>${getEmoji(hobby.Title)}</span>';" />
+                                    </div>
+                                `;
+                            } else {
+                                mediaHTML = `<span class="text-2xl mb-2 block transform transition-transform duration-300 hover:scale-125">${getEmoji(hobby.Title)}</span>`;
+                            }
+
                             const card = document.createElement('div');
                             card.className = "interactive-element p-5 bg-gray-50 border border-gray-100 rounded-2xl text-center shadow-sm category-card";
                             card.style.transitionDelay = `${index * 60}ms`;
                             card.innerHTML = `
-                                <span class="text-2xl mb-2 block transform transition-transform duration-300 hover:scale-125">${emoji}</span>
+                                ${mediaHTML}
                                 <h4 class="font-bold text-gray-900 text-sm tracking-tight">${hobby.Title}</h4>
                                 <p class="text-xs text-gray-500 mt-1.5 leading-relaxed">${hobby.Description || ''}</p>
                             `;
@@ -452,8 +472,8 @@
                     }
                 }
             } catch (e) {
-                console.error(e.message);
-                if (hobbiesContainer) hobbiesContainer.innerHTML = '<p class="text-red-500 text-xs col-span-full text-center">Failed to load hobbies.</p>';
+                console.error("Erreur Hobbies:", e.message);
+                if (hobbiesContainer) hobbiesContainer.innerHTML = '<p class="text-red-500 text-xs col-span-full text-center">Échec du chargement des intérêts.</p>';
             }
         }
 
@@ -472,16 +492,20 @@
 
         const btn = document.querySelector('.mobile-menu-button');
         const menu = document.querySelector('.mobile-menu');
-        btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+        if (btn && menu) {
+            btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+        }
 
         window.addEventListener('scroll', () => {
             const nav = document.getElementById('main-nav');
-            if (window.scrollY > 40) {
-                nav.classList.add('bg-white/90', 'shadow-md', 'py-2');
-                nav.classList.remove('py-4', 'bg-white/70');
-            } else {
-                nav.classList.add('py-4', 'bg-white/70');
-                nav.classList.remove('bg-white/90', 'shadow-md', 'py-2');
+            if (nav) {
+                if (window.scrollY > 40) {
+                    nav.classList.add('bg-white/90', 'shadow-md', 'py-2');
+                    nav.classList.remove('py-4', 'bg-white/70');
+                } else {
+                    nav.classList.add('py-4', 'bg-white/70');
+                    nav.classList.remove('bg-white/90', 'shadow-md', 'py-2');
+                }
             }
         });
     </script>

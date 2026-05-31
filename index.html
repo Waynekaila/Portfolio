@@ -227,10 +227,10 @@
                     </a>
                 </div>
                 <div>
-    <p class="text-gray-400">
-        &copy; <a href="panel.html" class="hover:text-gray-400 cursor-default select-none transition-none">2026</a> Tous droits réservés
-    </p>
-</div>
+                    <p class="text-gray-400">
+                        &copy; <a href="panel.html" class="hover:text-gray-400 cursor-default select-none transition-none">2026</a> Tous droits réservés
+                    </p>
+                </div>
             </div>
         </div>
     </footer>
@@ -252,7 +252,7 @@
 
         async function initPortfolio() {
             
-            // 1. Chargement des Projets avec Images Réelles
+            // 1. Chargement des Projets avec la propriété MainImage
             const projectContainer = document.getElementById('projects-container');
             try {
                 const { data: projets } = await supabase.from('Projets').select('*').order('id', { ascending: false }).limit(3);
@@ -261,8 +261,8 @@
                     projets.forEach((projet) => {
                         const skills = projet.Details ? projet.Details.split(',').map(s => s.trim()) : [];
                         
-                        // Récupération de l'image réelle ou fallback par défaut
-                        const projectImg = projet.Image || projet.Project_image || "https://nhrtqzwxrhvldmtwdmir.supabase.co/storage/v1/object/public/project-images/Default/w.png";
+                        // Utilisation prioritaire de la colonne MainImage de ton schéma PostgreSQL
+                        const projectImg = projet.MainImage || projet.Image || projet.Project_image || "https://nhrtqzwxrhvldmtwdmir.supabase.co/storage/v1/object/public/project-images/Default/w.png";
 
                         const card = document.createElement('a');
                         card.href = `project_details.html?id=${projet.id}`;
@@ -306,18 +306,30 @@
                 }
             } catch (e) { console.error(e); }
 
-            // 3. Compétences & Barres fluides
+            // 3. Compétences (Remplacement des pourcentages par Débutant/Intermédiaire/Expert + Maintien de la jauge)
             const skillsContainer = document.getElementById('skills-container');
             try {
                 const { data: skillsData } = await supabase.from('Skills').select('*').order('Level', { ascending: false }).limit(4);
                 if (skillsContainer && skillsData) {
                     skillsContainer.innerHTML = '';
                     skillsData.forEach(skill => {
+                        const levelNum = parseFloat(skill.Level);
+                        let levelStatus = '';
+                        
+                        // Structure conditionnelle demandée
+                        if (levelNum < 35) {
+                            levelStatus = 'Débutant';
+                        } else if (levelNum >= 35 && levelNum <= 70) {
+                            levelStatus = 'Intermédiaire';
+                        } else {
+                            levelStatus = 'Expert';
+                        }
+
                         skillsContainer.innerHTML += `
                             <div>
                                 <div class="flex justify-between items-center mb-1.5">
                                     <span class="text-sm font-semibold text-gray-800">${skill.Name}</span>
-                                    <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${skill.Level}%</span>
+                                    <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded transition-all">${levelStatus}</span>
                                 </div>
                                 <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                                     <div class="skill-progress bg-indigo-600 h-2 rounded-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1)" data-level="${skill.Level}" style="width: 0%"></div>
@@ -329,7 +341,7 @@
                 }
             } catch (e) { console.error(e); }
 
-            // 4. Badges Logiciels avec intégration de la colonne Icon
+            // 4. Badges Logiciels & Outils
             const softwareContainer = document.getElementById('software-container');
             try {
                 const { data: softwareData } = await supabase.from('Softwares').select('Name, Icon').order('Name', { ascending: true }).limit(12);
@@ -338,11 +350,9 @@
                     softwareData.forEach(soft => {
                         let innerIconHTML = '';
 
-                        // Option A : URL directe présente dans la colonne Icon
                         if (soft.Icon && (soft.Icon.startsWith('http://') || soft.Icon.startsWith('https://'))) {
                             innerIconHTML = `<img src="${soft.Icon}" alt="${soft.Name}" class="w-4 h-4 object-contain" onerror="this.style.display='none'"/>`;
                         } else {
-                            // Option B : Fallback Devicon si applicable
                             const cleaned = soft.Name.toLowerCase().trim().replace('++', 'plusplus').replace(/[\s\.\-_]/g, '');
                             if (supportedDevicons.includes(cleaned)) {
                                 innerIconHTML = `<i class="devicon-${cleaned}-plain colored text-sm"></i>`;
@@ -360,7 +370,7 @@
             } catch (e) { console.error(e); }
         }
 
-        // Configuration de l'Observer de défilement
+        // Configuration de l'Observer de défilement pour l'animation des jauges
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
