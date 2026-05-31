@@ -293,11 +293,16 @@
         });
 
         // Bouton Déconnexion
-        document.getElementById('btn-logout').addEventListener('click', async () => {
-            const { error } = await supabase.auth.signOut();
-            if (error) alert("Erreur lors de la déconnexion : " + error.message);
-        });
-
+        // Bouton Déconnexion
+document.getElementById('btn-logout').addEventListener('click', async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        alert("Erreur lors de la déconnexion : " + error.message);
+    } else {
+        // Redirection vers la page d'accueil après déconnexion réussie
+        window.location.href = "index.html";
+    }
+});
 
         // --- LOGIQUE DES ONGLETS PORTFOLIO ---
         window.switchTab = function(tabName) {
