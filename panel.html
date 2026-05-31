@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace Pro | Console CRUD Master | Wayne</title>
+    <link rel="icon" type="image/png" href="https://nhrtqzwxrhvldmtwdmir.supabase.co/storage/v1/object/public/project-images/Default/w.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&display=swap');
+        :root { --bg-main: #090d16; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-main); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col antialiased">
+
+    <div class="h-[2px] w-full bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400"></div>
+
+    <div id="auth-screen" class="hidden flex-1 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <div class="flex flex-col items-center mb-6">
+                <div class="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 mb-3">
+                    <i class="bi bi-shield-lock text-white text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white">Connexion requise</h2>
+                <p class="text-xs text-gray-400 mt-1 text-center">Console d'administration sécurisée Portfolio</p>
+            </div>
+            
+            <form id="form-login" class="space-y-4">
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-gray-400">Adresse Email</label>
+                    <input type="email" id="login-email" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-gray-400">Mot de passe</label>
+                    <input type="password" id="login-password" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl text-sm transition-colors duration-200 shadow-md">
+                    Se connecter
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-content" class="hidden flex-1 flex flex-col">
+        <header class="border-b border-gray-800 bg-gray-900/60 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i class="bi bi-cpu text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold tracking-tight text-white">Wayne</h1>
+                    <p class="text-[11px] text-gray-400 font-medium tracking-wide uppercase">Console CRUD Master v5.1</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="project_page.html" target="_blank" class="text-xs font-semibold px-4 py-2 rounded-xl bg-gray-800 text-gray-200 border border-gray-700/60 hover:bg-gray-700 hover:text-white transition-all duration-200 flex items-center gap-2">
+                    <span>Live Portfolio</span> <i class="bi bi-arrow-up-right text-[10px]"></i>
+                </a>
+                <button id="btn-logout" class="text-xs font-semibold px-4 py-2 rounded-xl bg-red-950/40 text-red-400 border border-red-900/40 hover:bg-red-900 hover:text-white transition-all duration-200 flex items-center gap-2">
+                    <i class="bi bi-box-arrow-right"></i> Déconnexion
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-1 flex-col lg:flex-row max-w-[1400px] w-full mx-auto p-4 sm:p-6 lg:p-8 gap-8">
+            <aside class="lg:w-72 flex flex-col gap-2">
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-3 mb-1">Architecture & Contenu</p>
+                <nav class="space-y-1" id="sidebar-nav">
+                    <button onclick="switchTab('projets')" id="btn-projets" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-indigo-600/10 text-indigo-400 border border-indigo-500/20">
+                        <i class="bi bi-folder2-open text-base"></i> <span>Projets</span>
+                    </button>
+                    <button onclick="switchTab('experiences')" id="btn-experiences" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-gray-400 transition-all duration-200 hover:bg-gray-800/50 hover:text-gray-200">
+                        <i class="bi bi-briefcase text-base"></i> <span>Expériences</span>
+                    </button>
+                    <button onclick="switchTab('activities')" id="btn-activities" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-gray-400 transition-all duration-200 hover:bg-gray-800/50 hover:text-gray-200">
+                        <i class="bi bi-calendar-event text-base"></i> <span>Activités & News</span>
+                    </button>
+                    <button onclick="switchTab('softwares')" id="btn-softwares" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-gray-400 transition-all duration-200 hover:bg-gray-800/50 hover:text-gray-200">
+                        <i class="bi bi-layers text-base"></i> <span>Logiciels</span>
+                    </button>
+                    <button onclick="switchTab('skills')" id="btn-skills" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-gray-400 transition-all duration-200 hover:bg-gray-800/50 hover:text-gray-200">
+                        <i class="bi bi-bar-chart text-base"></i> <span>Hard Skills</span>
+                    </button>
+                    <button onclick="switchTab('softskills')" id="btn-softskills" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-gray-400 transition-all duration-200 hover:bg-gray-800/50 hover:text-gray-200">
+                        <i class="bi bi-shield-check text-base"></i> <span>Soft Skills</span>
+                    </button>
+                    <button onclick="switchTab('hobbies')" id="btn-hobbies" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-gray-400 transition-all duration-200 hover:bg-gray-800/50 hover:text-gray-200">
+                        <i class="bi bi-heart text-base"></i> <span>Centres d'intérêt</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <main class="flex-1 min-w-0">
+                <section id="tab-projets" class="tab-content active space-y-8">
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                        <h2 class="text-xl font-bold text-white mb-1" id="title-project-form">Créer un nouveau projet</h2>
+                        <form id="form-project" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-800/60 pt-6">
+                            <input type="hidden" id="proj-id">
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs font-semibold text-gray-300">Titre</label>
+                                <input type="text" id="proj-title" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs font-semibold text-gray-300">Sous-titres</label>
+                                <input type="text" id="proj-sub" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs font-semibold text-gray-300">Lien du projet</label>
+                                <input type="url" id="proj-link" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs font-semibold text-gray-300">URL Image Principale (MainImage)</label>
+                                <input type="text" id="proj-mainimage" placeholder="https://.../image.png" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                            </div>
+                            <div class="flex flex-col gap-2 md:col-span-2">
+                                <label class="text-xs font-semibold text-gray-300">URLs Carrousel d'images (Format JSON JSONB)</label>
+                                <textarea id="proj-carousel" rows="2" placeholder='["https://lien1.com/img.png", "https://lien2.com/img.png"]' class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 font-mono text-xs text-white focus:outline-none"></textarea>
+                            </div>
+                            <div class="flex flex-col gap-2 md:col-span-2">
+                                <label class="text-xs font-semibold text-gray-300">Description</label>
+                                <textarea id="proj-desc" rows="3" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></textarea>
+                            </div>
+                            <div class="md:col-span-2 flex justify-end gap-3 pt-2">
+                                <button type="button" id="cancel-project" onclick="resetProjectForm()" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 px-5 py-3 rounded-xl text-xs font-semibold">Annuler</button>
+                                <button type="submit" id="submit-project" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-xs font-semibold">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="table-projets-body"></div>
+                </section>
+
+                <section id="tab-experiences" class="tab-content space-y-8">
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                        <h2 class="text-xl font-bold text-white mb-1" id="title-exp-form">Ajouter une expérience</h2>
+                        <form id="form-experience" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-800/60 pt-6">
+                            <input type="hidden" id="exp-id">
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Rôle / Poste</label><input type="text" id="exp-role" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Entreprise / Organisation</label><input type="text" id="exp-company" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Affichage Date (ex: "Jan 2026 - Présent")</label><input type="text" id="exp-datedisplay" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Date (Tri de l'historique)</label><input type="date" id="exp-date" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2 md:col-span-2"><label class="text-xs font-semibold text-gray-300">Lieu (Location)</label><input type="text" id="exp-location" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2 md:col-span-2"><label class="text-xs font-semibold text-gray-300">Description des missions</label><textarea id="exp-desc" rows="3" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></textarea></div>
+                            <div class="md:col-span-2 flex justify-end gap-3 pt-2">
+                                <button type="button" id="cancel-exp" onclick="resetExpForm()" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 px-5 py-3 rounded-xl text-xs font-semibold">Annuler</button>
+                                <button type="submit" id="submit-exp" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-xs font-semibold">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                        <table class="w-full text-left text-sm"><thead class="bg-gray-850 border-b border-gray-800 text-[11px] font-bold text-gray-400 uppercase tracking-wider"><tr><th class="p-4">Poste & Entreprise</th><th class="p-4">Date</th><th class="p-4">Lieu</th><th class="p-4 text-right">Actions</th></tr></thead><tbody id="table-experiences-body" class="divide-y divide-gray-800/60"></tbody></table>
+                    </div>
+                </section>
+
+                <section id="tab-activities" class="tab-content space-y-8">
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                        <h2 class="text-xl font-bold text-white mb-1" id="title-act-form">Ajouter une activité / Événement</h2>
+                        <form id="form-activity" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-800/60 pt-6">
+                            <input type="hidden" id="act-id">
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Titre</label><input type="text" id="act-title" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Sous-titre</label><input type="text" id="act-sub" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Date d'affichage (Texte)</label><input type="text" id="act-datedisplay" placeholder="Ex: Mai 2026" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Date précise (Tri)</label><input type="date" id="act-date" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Texte du Badge</label><input type="text" id="act-badgedisplay" placeholder="Ex: Conférence" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Couleur du Badge (Hex/Tailwind)</label><input type="text" id="act-badgecolor" placeholder="Ex: #indigo-500" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2 md:col-span-2"><label class="text-xs font-semibold text-gray-300">Description</label><textarea id="act-desc" rows="3" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></textarea></div>
+                            <div class="md:col-span-2 flex justify-end gap-3 pt-2">
+                                <button type="button" id="cancel-act" onclick="resetActForm()" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 px-5 py-3 rounded-xl text-xs font-semibold">Annuler</button>
+                                <button type="submit" id="submit-act" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-xs font-semibold">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                        <table class="w-full text-left text-sm"><thead class="bg-gray-850 border-b border-gray-800 text-[11px] font-bold text-gray-400 uppercase tracking-wider"><tr><th class="p-4">Badge</th><th class="p-4">Activité</th><th class="p-4">Date</th><th class="p-4 text-right">Actions</th></tr></thead><tbody id="table-activities-body" class="divide-y divide-gray-800/60"></tbody></table>
+                    </div>
+                </section>
+
+                <section id="tab-softwares" class="tab-content space-y-8">
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                        <h2 class="text-xl font-bold text-white mb-1" id="title-soft-form">Ajouter un logiciel</h2>
+                        <form id="form-software" class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-gray-800/60 pt-6">
+                            <input type="hidden" id="soft-id">
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Nom</label><input type="text" id="soft-name" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Catégorie</label><input type="text" id="soft-cat" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Lien Direct Icône (URL)</label><input type="text" id="soft-icon" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none" placeholder="https://..."></div>
+                            <div class="md:col-span-3 flex justify-end gap-3 pt-2">
+                                <button type="button" id="cancel-soft" onclick="resetSoftForm()" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 px-5 py-3 rounded-xl text-xs font-semibold">Annuler</button>
+                                <button type="submit" id="submit-soft" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-xs font-semibold">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                        <table class="w-full text-left text-sm"><thead class="bg-gray-850 border-b border-gray-800 text-[11px] font-bold text-gray-400 uppercase tracking-wider"><tr><th class="p-4">Logo</th><th class="p-4">Logiciel</th><th class="p-4">Catégorie</th><th class="p-4 text-right">Actions</th></tr></thead><tbody id="table-softwares-body" class="divide-y divide-gray-800/60"></tbody></table>
+                    </div>
+                </section>
+
+                <section id="tab-skills" class="tab-content space-y-8">
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                        <h2 class="text-xl font-bold text-white mb-1" id="title-skill-form">Ajouter une compétence</h2>
+                        <form id="form-skill" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-800/60 pt-6">
+                            <input type="hidden" id="skill-id">
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Compétence</label><input type="text" id="skill-name" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Niveau (%)</label><input type="number" id="skill-level" min="1" max="100" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="md:col-span-2 flex justify-end gap-3 pt-2">
+                                <button type="button" id="cancel-skill" onclick="resetSkillForm()" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 px-5 py-3 rounded-xl text-xs font-semibold">Annuler</button>
+                                <button type="submit" id="submit-skill" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-xs font-semibold">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                        <table class="w-full text-left text-sm"><thead class="bg-gray-850 border-b border-gray-800 text-[11px] font-bold text-gray-400 uppercase tracking-wider"><tr><th class="p-4">Compétence</th><th class="p-4">Niveau</th><th class="p-4 text-right">Actions</th></tr></thead><tbody id="table-skills-body" class="divide-y divide-gray-800/60"></tbody></table>
+                    </div>
+                </section>
+
+                <section id="tab-softskills" class="tab-content space-y-8">
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                        <h2 class="text-xl font-bold text-white mb-1" id="title-softskill-form">Ajouter un Soft Skill</h2>
+                        <form id="form-softskill" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-800/60 pt-6">
+                            <input type="hidden" id="softskill-id">
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Qualité humaine (Name)</label><input type="text" id="softskill-name" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Classe Icône ou Image (Icon)</label><input type="text" id="softskill-icon" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none" placeholder="ex: bi bi-heart"></div>
+                            <div class="md:col-span-2 flex justify-end gap-3 pt-2">
+                                <button type="button" id="cancel-softskill" onclick="resetSoftskillForm()" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 px-5 py-3 rounded-xl text-xs font-semibold">Annuler</button>
+                                <button type="submit" id="submit-softskill" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-xs font-semibold">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                        <table class="w-full text-left text-sm"><thead class="bg-gray-850 border-b border-gray-800 text-[11px] font-bold text-gray-400 uppercase tracking-wider"><tr><th class="p-4">Icône</th><th class="p-4">Soft Skill</th><th class="p-4 text-right">Actions</th></tr></thead><tbody id="table-softskills-body" class="divide-y divide-gray-800/60"></tbody></table>
+                    </div>
+                </section>
+
+                <section id="tab-hobbies" class="tab-content space-y-8">
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                        <h2 class="text-xl font-bold text-white mb-1" id="title-hobby-form">Ajouter un centre d'intérêt</h2>
+                        <form id="form-hobby" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-800/60 pt-6">
+                            <input type="hidden" id="hobby-id">
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Activité (Title)</label><input type="text" id="hobby-title" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="flex flex-col gap-2"><label class="text-xs font-semibold text-gray-300">Détails (Description)</label><input type="text" id="hobby-desc" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"></div>
+                            <div class="md:col-span-2 flex justify-end gap-3 pt-2">
+                                <button type="button" id="cancel-hobby" onclick="resetHobbyForm()" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 px-5 py-3 rounded-xl text-xs font-semibold">Annuler</button>
+                                <button type="submit" id="submit-hobby" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-xs font-semibold">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                        <table class="w-full text-left text-sm"><thead class="bg-gray-850 border-b border-gray-800 text-[11px] font-bold text-gray-400 uppercase tracking-wider"><tr><th class="p-4">Activité</th><th class="p-4">Détails</th><th class="p-4 text-right">Actions</th></tr></thead><tbody id="table-hobbies-body" class="divide-y divide-gray-800/60"></tbody></table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+        const SUPABASE_URL = "https://nhrtqzwxrhvldmtwdmir.supabase.co"
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ocnRxend4cmh2bGRtdHdkbWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjUyNzYsImV4cCI6MjA5NTc0MTI3Nn0.KEctPSX1qxX6jMZEWC1Fl0WRNqPp_YMKAnJ2jEz3PzE"
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+        let cache = { Projets:[], Experiences:[], Activities:[], Softwares:[], Skills:[], SoftSkills:[], Hobbies:[] };
+
+        // --- GESTION SESSION ET AUTHENTIFICATION ---
+        const authScreen = document.getElementById('auth-screen');
+        const appContent = document.getElementById('app-content');
+
+        // Écouteur d'état d'authentification
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                authScreen.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                loadAllData();
+            } else {
+                appContent.classList.add('hidden');
+                authScreen.classList.remove('hidden');
+            }
+        });
+
+        // Formulaire de Connexion
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                alert("Échec de la connexion : " + error.message);
+            }
+        });
+
+        // Bouton Déconnexion
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            const { error } = await supabase.auth.signOut();
+            if (error) alert("Erreur lors de la déconnexion : " + error.message);
+        });
+
+
+        // --- LOGIQUE DES ONGLETS PORTFOLIO ---
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.className = "tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-gray-400 transition-all duration-200 hover:bg-gray-800/50 hover:text-gray-200");
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`btn-${tabName}`).className = "tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-indigo-600/10 text-indigo-400 border border-indigo-500/20";
+        }
+
+        async function loadAllData() {
+            await Promise.all([loadProjets(), loadExperiences(), loadActivities(), loadSoftwares(), loadSkills(), loadSoftSkills(), loadHobbies()]);
+        }
+
+        async function deleteRow(tableName, id) {
+            if(confirm(`Supprimer définitivement cet élément de la table ${tableName} ?`)) {
+                const { error } = await supabase.from(tableName).delete().eq('id', id);
+                if(error) alert("Erreur : " + error.message);
+                else loadAllData();
+            }
+        }
+        window.deleteRow = deleteRow;
+
+        // --- SECTIONS ACTIONS CRUD INDIVIDUELLES ---
+
+        // 1. PROJETS
+        async function loadProjets() {
+            const { data, error } = await supabase.from('Projets').select('*').order('id', { ascending: false });
+            if(!error && data) {
+                cache.Projets = data;
+                const container = document.getElementById('table-projets-body');
+                container.innerHTML = data.map(p => `
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl flex flex-col justify-between">
+                        <img src="${p.MainImage || 'https://placehold.co/600x300'}" class="w-full h-40 object-cover border-b border-gray-800" onerror="this.src='https://placehold.co/600x300'">
+                        <div class="p-5 flex-1 flex flex-col justify-between gap-4">
+                            <div>
+                                <h3 class="text-md font-bold text-white">${p.Title}</h3>
+                                <p class="text-xs text-gray-400 mt-1 line-clamp-3">${p.Description || ''}</p>
+                            </div>
+                            <div class="flex justify-end gap-2 border-t border-gray-800/60 pt-3">
+                                <button onclick="editProjet(${p.id})" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-800 text-indigo-400 hover:bg-gray-700 transition"><i class="bi bi-pencil"></i></button>
+                                <button onclick="deleteRow('Projets', ${p.id})" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-800 text-red-400 hover:bg-gray-700 transition"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        document.getElementById('form-project').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('proj-id').value;
+            const payload = {
+                Title: document.getElementById('proj-title').value,
+                Description: document.getElementById('proj-desc').value,
+                Subtitles: document.getElementById('proj-sub').value,
+                Link: document.getElementById('proj-link').value,
+                MainImage: document.getElementById('proj-mainimage').value,
+                CarouselImages: document.getElementById('proj-carousel').value ? JSON.parse(document.getElementById('proj-carousel').value) : null
+            };
+            const { error } = id ? await supabase.from('Projets').update(payload).eq('id', id) : await supabase.from('Projets').insert(payload);
+            if(error) alert(error.message); else { resetProjectForm(); loadProjets(); }
+        });
+
+        window.editProjet = function(id) {
+            const item = cache.Projets.find(p => p.id === id); if(!item) return;
+            document.getElementById('proj-id').value = item.id;
+            document.getElementById('proj-title').value = item.Title;
+            document.getElementById('proj-desc').value = item.Description || '';
+            document.getElementById('proj-sub').value = item.Subtitles || '';
+            document.getElementById('proj-link').value = item.Link || '';
+            document.getElementById('proj-mainimage').value = item.MainImage || '';
+            document.getElementById('proj-carousel').value = item.CarouselImages ? (typeof item.CarouselImages === 'string' ? item.CarouselImages : JSON.stringify(item.CarouselImages)) : '';
+            document.getElementById('title-project-form').innerText = "Modifier le Projet #" + id;
+            document.getElementById('cancel-project').classList.remove('hidden');
+        }
+        window.resetProjectForm = function() { document.getElementById('form-project').reset(); document.getElementById('proj-id').value = ''; document.getElementById('title-project-form').innerText = "Créer un nouveau projet"; document.getElementById('cancel-project').classList.add('hidden'); }
+
+
+        // 2. EXPERIENCES
+        async function loadExperiences() {
+            const { data, error } = await supabase.from('Experiences').select('*').order('Exp_date', { ascending: false });
+            if(!error && data) {
+                cache.Experiences = data;
+                document.getElementById('table-experiences-body').innerHTML = data.map(e => `
+                    <tr>
+                        <td class="p-4 font-semibold text-white">${e.Role} <span class="text-gray-400 font-normal">at ${e.Company}</span></td>
+                        <td class="p-4 text-gray-300 text-xs">${e.Date_display}</td>
+                        <td class="p-4 text-gray-400 text-xs">${e.Location || '-'}</td>
+                        <td class="p-4 text-right space-x-1">
+                            <button onclick="editExperience(${e.id})" class="p-1.5 text-indigo-400 hover:bg-gray-800 rounded"><i class="bi bi-pencil"></i></button>
+                            <button onclick="deleteRow('Experiences', ${e.id})" class="p-1.5 text-red-400 hover:bg-gray-800 rounded"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        document.getElementById('form-experience').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('exp-id').value;
+            const payload = {
+                Role: document.getElementById('exp-role').value,
+                Company: document.getElementById('exp-company').value,
+                Date_display: document.getElementById('exp-datedisplay').value,
+                Exp_date: document.getElementById('exp-date').value,
+                Location: document.getElementById('exp-location').value,
+                Description: document.getElementById('exp-desc').value
+            };
+            const { error } = id ? await supabase.from('Experiences').update(payload).eq('id', id) : await supabase.from('Experiences').insert(payload);
+            if(error) alert(error.message); else { resetExpForm(); loadExperiences(); }
+        });
+
+        window.editExperience = function(id) { const item = cache.Experiences.find(e => e.id === id); if(!item) return; document.getElementById('exp-id').value = item.id; document.getElementById('exp-role').value = item.Role; document.getElementById('exp-company').value = item.Company; document.getElementById('exp-desc').value = item.Description || ''; document.getElementById('exp-datedisplay').value = item.Date_display || ''; document.getElementById('exp-date').value = item.Exp_date || ''; document.getElementById('exp-location').value = item.Location || ''; document.getElementById('title-exp-form').innerText = "Modifier l'expérience"; document.getElementById('cancel-exp').classList.remove('hidden'); }
+        window.resetExpForm = function() { document.getElementById('form-experience').reset(); document.getElementById('exp-id').value = ''; document.getElementById('title-exp-form').innerText = "Ajouter une expérience"; document.getElementById('cancel-exp').classList.add('hidden'); }
+
+
+        // 3. ACTIVITES / NEWS
+        async function loadActivities() {
+            const { data, error } = await supabase.from('Activities').select('*').order('Activity_date', { ascending: false });
+            if(!error && data) {
+                cache.Activities = data;
+                document.getElementById('table-activities-body').innerHTML = data.map(a => `
+                    <tr>
+                        <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold" style="background:${a.Badge_color || '#374151'}; color:#fff">${a.Badge_display || 'News'}</span></td>
+                        <td class="p-4 font-semibold text-white">${a.Title} <div class="text-[11px] text-gray-400 font-normal mt-0.5">${a.Subtitle || ''}</div></td>
+                        <td class="p-4 text-gray-300 text-xs">${a.Date_display || '-'}</td>
+                        <td class="p-4 text-right space-x-1">
+                            <button onclick="editActivity(${a.id})" class="p-1.5 text-indigo-400 hover:bg-gray-800 rounded"><i class="bi bi-pencil"></i></button>
+                            <button onclick="deleteRow('Activities', ${a.id})" class="p-1.5 text-red-400 hover:bg-gray-800 rounded"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        document.getElementById('form-activity').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('act-id').value;
+            const payload = {
+                Title: document.getElementById('act-title').value,
+                Subtitle: document.getElementById('act-sub').value,
+                Date_display: document.getElementById('act-datedisplay').value,
+                Activity_date: document.getElementById('act-date').value,
+                Badge_display: document.getElementById('act-badgedisplay').value,
+                Badge_color: document.getElementById('act-badgecolor').value,
+                Description: document.getElementById('act-desc').value
+            };
+            const { error } = id ? await supabase.from('Activities').update(payload).eq('id', id) : await supabase.from('Activities').insert(payload);
+            if(error) alert(error.message); else { resetActForm(); loadActivities(); }
+        });
+
+        window.editActivity = function(id) { const item = cache.Activities.find(a => a.id === id); if(!item) return; document.getElementById('act-id').value = item.id; document.getElementById('act-title').value = item.Title; document.getElementById('act-sub').value = item.Subtitle || ''; document.getElementById('act-desc').value = item.Description || ''; document.getElementById('act-badgecolor').value = item.Badge_color || ''; document.getElementById('act-badgedisplay').value = item.Badge_display || ''; document.getElementById('act-date').value = item.Activity_date || ''; document.getElementById('act-datedisplay').value = item.Date_display || ''; document.getElementById('title-act-form').innerText = "Modifier l'activité"; document.getElementById('cancel-act').classList.remove('hidden'); }
+        window.resetActForm = function() { document.getElementById('form-activity').reset(); document.getElementById('act-id').value = ''; document.getElementById('title-act-form').innerText = "Ajouter une activité / Événement"; document.getElementById('cancel-act').classList.add('hidden'); }
+
+
+        // 4. LOGICIELS
+        async function loadSoftwares() {
+            const { data, error } = await supabase.from('Softwares').select('*').order('id', { ascending: false });
+            if(!error && data) {
+                cache.Softwares = data;
+                document.getElementById('table-softwares-body').innerHTML = data.map(s => `
+                    <tr>
+                        <td class="p-4"><img src="${s.Icon}" class="h-6 w-6 object-contain" onerror="this.src='https://placehold.co/50'"></td>
+                        <td class="p-4 font-semibold text-white">${s.Name}</td>
+                        <td class="p-4 text-gray-400 text-xs">${s.Category}</td>
+                        <td class="p-4 text-right space-x-1">
+                            <button onclick="editSoftware(${s.id})" class="p-1.5 text-indigo-400 hover:bg-gray-800 rounded"><i class="bi bi-pencil"></i></button>
+                            <button onclick="deleteRow('Softwares', ${s.id})" class="p-1.5 text-red-400 hover:bg-gray-800 rounded"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        document.getElementById('form-software').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('soft-id').value;
+            const payload = { Name: document.getElementById('soft-name').value, Category: document.getElementById('soft-cat').value, Icon: document.getElementById('soft-icon').value };
+            const { error } = id ? await supabase.from('Softwares').update(payload).eq('id', id) : await supabase.from('Softwares').insert(payload);
+            if(error) alert(error.message); else { resetSoftForm(); loadSoftwares(); }
+        });
+
+        window.editSoftware = function(id) { const item = cache.Softwares.find(s => s.id === id); if(!item) return; document.getElementById('soft-id').value = item.id; document.getElementById('soft-name').value = item.Name; document.getElementById('soft-cat').value = item.Category; document.getElementById('soft-icon').value = item.Icon || ''; document.getElementById('title-soft-form').innerText = "Modifier le logiciel"; document.getElementById('cancel-soft').classList.remove('hidden'); }
+        window.resetSoftForm = function() { document.getElementById('form-software').reset(); document.getElementById('soft-id').value = ''; document.getElementById('title-soft-form').innerText = "Ajouter un logiciel"; document.getElementById('cancel-soft').classList.add('hidden'); }
+
+
+        // 5. HARD SKILLS
+        async function loadSkills() {
+            const { data, error } = await supabase.from('Skills').select('*').order('Level', { ascending: false });
+            if(!error && data) {
+                cache.Skills = data;
+                document.getElementById('table-skills-body').innerHTML = data.map(s => `
+                    <tr>
+                        <td class="p-4 font-semibold text-white">${s.Name}</td>
+                        <td class="p-4"><div class="flex items-center gap-2"><div class="w-24 bg-gray-700 h-2 rounded-full overflow-hidden"><div class="bg-indigo-500 h-full" style="width:${s.Level}%"></div></div> <span class="text-xs text-gray-300 font-mono">${s.Level}%</span></div></td>
+                        <td class="p-4 text-right space-x-1">
+                            <button onclick="editSkill(${s.id})" class="p-1.5 text-indigo-400 hover:bg-gray-800 rounded"><i class="bi bi-pencil"></i></button>
+                            <button onclick="deleteRow('Skills', ${s.id})" class="p-1.5 text-red-400 hover:bg-gray-800 rounded"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        document.getElementById('form-skill').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('skill-id').value;
+            const payload = { Name: document.getElementById('skill-name').value, Level: parseInt(document.getElementById('skill-level').value) };
+            const { error } = id ? await supabase.from('Skills').update(payload).eq('id', id) : await supabase.from('Skills').insert(payload);
+            if(error) alert(error.message); else { resetSkillForm(); loadSkills(); }
+        });
+
+        window.editSkill = function(id) { const item = cache.Skills.find(s => s.id === id); if(!item) return; document.getElementById('skill-id').value = item.id; document.getElementById('skill-name').value = item.Name; document.getElementById('skill-level').value = item.Level; document.getElementById('title-skill-form').innerText = "Modifier la compétence"; document.getElementById('cancel-skill').classList.remove('hidden'); }
+        window.resetSkillForm = function() { document.getElementById('form-skill').reset(); document.getElementById('skill-id').value = ''; document.getElementById('title-skill-form').innerText = "Ajouter une compétence"; document.getElementById('cancel-skill').classList.add('hidden'); }
+
+
+        // 6. SOFT SKILLS
+        async function loadSoftSkills() {
+            const { data, error } = await supabase.from('SoftSkills').select('*').order('id', { ascending: false });
+            if(!error && data) {
+                cache.SoftSkills = data;
+                document.getElementById('table-softskills-body').innerHTML = data.map(s => `
+                    <tr>
+                        <td class="p-4 text-indigo-400 text-lg"><i class="${s.Icon || 'bi bi-patch-check'}"></i></td>
+                        <td class="p-4 font-semibold text-white">${s.Name}</td>
+                        <td class="p-4 text-right space-x-1">
+                            <button onclick="editSoftskill(${s.id})" class="p-1.5 text-indigo-400 hover:bg-gray-800 rounded"><i class="bi bi-pencil"></i></button>
+                            <button onclick="deleteRow('SoftSkills', ${s.id})" class="p-1.5 text-red-400 hover:bg-gray-800 rounded"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        document.getElementById('form-softskill').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('softskill-id').value;
+            const payload = { Name: document.getElementById('softskill-name').value, Icon: document.getElementById('softskill-icon').value };
+            const { error } = id ? await supabase.from('SoftSkills').update(payload).eq('id', id) : await supabase.from('SoftSkills').insert(payload);
+            if(error) alert(error.message); else { resetSoftskillForm(); loadSoftSkills(); }
+        });
+
+        window.editSoftskill = function(id) { const item = cache.SoftSkills.find(s => s.id === id); if(!item) return; document.getElementById('softskill-id').value = item.id; document.getElementById('softskill-name').value = item.Name; document.getElementById('softskill-icon').value = item.Icon || ''; document.getElementById('title-softskill-form').innerText = "Modifier le Soft Skill"; document.getElementById('cancel-softskill').classList.remove('hidden'); }
+        window.resetSoftskillForm = function() { document.getElementById('form-softskill').reset(); document.getElementById('softskill-id').value = ''; document.getElementById('title-softskill-form').innerText = "Ajouter un Soft Skill"; document.getElementById('cancel-softskill').classList.add('hidden'); }
+
+
+        // 7. CENTRES D'INTERET (HOBBIES)
+        async function loadHobbies() {
+            const { data, error } = await supabase.from('Hobbies').select('*').order('id', { ascending: false });
+            if(!error && data) {
+                cache.Hobbies = data;
+                document.getElementById('table-hobbies-body').innerHTML = data.map(h => `
+                    <tr>
+                        <td class="p-4 font-semibold text-white">${h.Title}</td>
+                        <td class="p-4 text-gray-400 text-xs">${h.Description || '-'}</td>
+                        <td class="p-4 text-right space-x-1">
+                            <button onclick="editHobby(${h.id})" class="p-1.5 text-indigo-400 hover:bg-gray-800 rounded"><i class="bi bi-pencil"></i></button>
+                            <button onclick="deleteRow('Hobbies', ${h.id})" class="p-1.5 text-red-400 hover:bg-gray-800 rounded"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        document.getElementById('form-hobby').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('hobby-id').value;
+            const payload = { Title: document.getElementById('hobby-title').value, Description: document.getElementById('hobby-desc').value };
+            const { error } = id ? await supabase.from('Hobbies').update(payload).eq('id', id) : await supabase.from('Hobbies').insert(payload);
+            if(error) alert(error.message); else { resetHobbyForm(); loadHobbies(); }
+        });
+
+        window.editHobby = function(id) { const item = cache.Hobbies.find(h => h.id === id); if(!item) return; document.getElementById('hobby-id').value = item.id; document.getElementById('hobby-title').value = item.Title; document.getElementById('hobby-desc').value = item.Description || ''; document.getElementById('title-hobby-form').innerText = "Modifier l'intérêt"; document.getElementById('cancel-hobby').classList.remove('hidden'); }
+        window.resetHobbyForm = function() { document.getElementById('form-hobby').reset(); document.getElementById('hobby-id').value = ''; document.getElementById('title-hobby-form').innerText = "Ajouter un centre d'intérêt"; document.getElementById('cancel-hobby').classList.add('hidden'); }
+
+    </script>
+</body>
+</html>
